@@ -48,6 +48,7 @@ full_chat_gpt_answer = get_text_area("", size=(APPLICATION_WIDTH, 12))
 layout = [
     [sg.Text("Press R to start recording", size=(int(APPLICATION_WIDTH * 0.8), 2)), record_status_button],
     [sg.Text("Press A to analyze the recording")],
+    [sg.Text("Press T to start live transcription")],
     [analyzed_text_label],
     [sg.Text("Short answer:")],
     [quick_chat_gpt_answer],
@@ -82,10 +83,15 @@ while True:
             WINDOW.perform_long_operation(background_recording_loop, "-RECORDING-")
         record_status_button.update(image_data=ON_IMAGE if record_status_button.metadata.state else OFF_IMAGE)
 
-    elif event in ("a", "A"):  # send audio to OpenAI Whisper model
+    elif event in ("a", "A"):  # send audio to Deepgram audio file model
         logger.debug("Analyzing audio...")
         analyzed_text_label.update("Start analyzing...")
         WINDOW.perform_long_operation(llm.transcribe_audio, "-WHISPER COMPLETED-")
+
+    elif event in ("t", "T"):  # send audio to deepgram live transcription
+        logger.debug("Listening to live audio...")
+        analyzed_text_label.update("Listening to live audio...")
+        WINDOW.start_thread(lambda: llm.live_listen_and_transcribe(WINDOW, 30), 'Thread-end')
 
     elif event == "-WHISPER COMPLETED-":
         audio_transcript = values["-WHISPER COMPLETED-"]
