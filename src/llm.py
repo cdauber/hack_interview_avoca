@@ -1,18 +1,16 @@
 import openai
 from loguru import logger
+from api_keys import OPENAI_API_KEY, DEEPGRAM_API_KEY
 
-from src.constants import INTERVIEW_POSTION, OPENAI_API_KEY, OUTPUT_FILE_NAME
-
-openai.api_key = OPENAI_API_KEY
-
-SYSTEM_PROMPT = f"""You are interviewing for a {INTERVIEW_POSTION} position.
-You will receive an audio transcription of the question. It may not be complete. You need to understand the question and write an answer to it.\n
-"""
-SHORTER_INSTRACT = "Concisely respond, limiting your answer to 70 words."
-LONGER_INSTRACT = (
-    "Before answering, take a deep breath and think one step at a time. Believe the answer in no more than 150 words."
+from constants import OUTPUT_FILE_NAME, SYSTEM_PROMPT, SHORTER_INSTRACT, LONGER_INSTRACT
+from deepgram import (
+    DeepgramClient,
+    PrerecordedOptions,
+    FileSource,
 )
 
+
+openai.api_key = OPENAI_API_KEY
 
 def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
     """
@@ -29,11 +27,29 @@ def transcribe_audio(path_to_file: str = OUTPUT_FILE_NAME) -> str:
     """
     with open(path_to_file, "rb") as audio_file:
         try:
-            transcript = openai.Audio.translate("whisper-1", audio_file)
+            # STEP 1 Create a Deepgram client using the API key
+            deepgram = DeepgramClient( DEEPGRAM_API_KEY)
+
+            payload: FileSource = {
+                "buffer": audio_file.read(),
+            }
+
+            #STEP 2: Configure Deepgram options for audio analysis
+            options = PrerecordedOptions(
+                model="nova-3",
+                smart_format=True,
+            )
+
+            # STEP 3: Call the transcribe_file method with the text payload and options
+            response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
+
+            # STEP 4: Print the response
+            print(response.to_json(indent=4))
+            
         except Exception as error:
             logger.error(f"Can't transcribe audio: {error}")
             raise error
-    return transcript["text"]
+    return response["results"]["channels"][0]['alternatives'][0]['transcript']
 
 
 def generate_answer(transcript: str, short_answer: bool = True, temperature: float = 0.7) -> str:

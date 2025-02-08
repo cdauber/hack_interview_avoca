@@ -4,9 +4,9 @@ import soundcard as sc
 import soundfile as sf
 from loguru import logger
 
-from src.constants import OUTPUT_FILE_NAME, RECORD_SEC, SAMPLE_RATE
+from constants import OUTPUT_FILE_NAME, RECORD_SEC, SAMPLE_RATE
 
-SPEAKER_ID = str(sc.default_speaker().name)
+SPEAKER_ID = str(sc.default_microphone().name)
 
 
 def record_batch(record_sec: int = RECORD_SEC) -> np.ndarray:
