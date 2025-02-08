@@ -5,3 +5,5 @@ soundcard==0.4.2
 soundfile==0.12.1
 loguru==0.7.2
 deepgram-sdk==3.9.0
+pip-system-certs==4.0
+pyaudio==0.2.14
